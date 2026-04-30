@@ -1,0 +1,57 @@
+# Full Context — my-server
+
+## What this machine is
+Production web server running the main API for example.com. PostgreSQL handles all persistent data. Redis for sessions and job queue. nginx as reverse proxy. Deployed via PM2.
+
+## Architecture
+```
+internet → nginx (:80/:443) → node API (:3000) → PostgreSQL (:5432)
+                                               → Redis (:6379)
+```
+
+## Key Paths
+/opt/app/              — application code (git repo, branch: main)
+/opt/app/.env          — production environment variables
+/var/lib/postgresql/   — database files (DO NOT TOUCH directly)
+/etc/nginx/            — nginx config
+/home/deploy/logs/     — application logs
+/home/deploy/backups/  — database backups (nightly cron)
+
+## Running Services
+| Service    | Command       | Port | Managed by |
+|------------|---------------|------|------------|
+| Node API   | pm2           | 3000 | PM2        |
+| PostgreSQL | systemd       | 5432 | systemd    |
+| Redis      | systemd       | 6379 | systemd    |
+| nginx      | systemd       | 80   | systemd    |
+
+## Health Checks
+```bash
+pm2 status                          # API process
+systemctl status postgresql redis   # database/cache
+curl -s http://localhost:3000/health # API health endpoint
+```
+
+## Database
+PostgreSQL 15. Main database: `appdb`. Key tables: users, sessions, jobs.
+Backup: /home/deploy/backups/appdb_YYYYMMDD.sql.gz (nightly at 2am)
+Connection: psql -U deploy appdb
+
+## Credentials / Secrets
+See /opt/app/.env — do not share outside this machine.
+
+## Known Issues
+- Redis occasionally OOMs under heavy load — check with `redis-cli info memory`
+- PM2 sometimes needs restart after kernel updates: `pm2 restart all`
+
+## Deployment
+```bash
+cd /opt/app
+git pull origin main
+npm install --production
+pm2 restart app
+```
+
+## Emergency Contacts
+Owner: you@example.com
+On-call: +1-555-0100

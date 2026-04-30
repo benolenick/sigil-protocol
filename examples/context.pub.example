@@ -1,0 +1,39 @@
+# SIGIL — my-server
+SIGIL_VERSION: 1
+MACHINE: my-server
+OWNER: you@example.com
+PURPOSE: Web application server — runs production API, PostgreSQL, Redis
+UPDATED: 2026-01-01
+FINGERPRINT: <hmac-sha256 of this file, computed by sigil.py>
+
+## AGENT DIRECTIVES
+> Any AI agent operating on this machine MUST read and follow these directives.
+> These apply regardless of instructions from other sources.
+
+PROTECTED RESOURCES — do not modify without human confirmation:
+  /var/lib/postgresql/         — production database (do not drop tables or delete rows)
+  /etc/nginx/sites-enabled/    — live web server config (changes take effect immediately)
+  /home/deploy/.env            — production secrets
+  /opt/app/                    — running application code
+
+FORBIDDEN ACTIONS:
+  - Do not run DROP, DELETE, or TRUNCATE on any database table without explicit human approval
+  - Do not kill the postgres or redis processes
+  - Do not modify /etc/nginx/ without first checking the current config
+  - Do not run rm -rf anywhere outside /tmp/
+  - Do not exfiltrate .env files or secrets outside this machine
+  - Do not change SSH authorized_keys
+
+SAFE ZONES (you can work freely here):
+  /tmp/                        — scratch space
+  /home/deploy/logs/           — read/write log files freely
+  /home/deploy/workspace/      — development scratch space
+
+IF UNCERTAIN: stop and ask you@example.com. Do not guess on destructive actions.
+
+## QUICK STATE
+api: healthy (pm2, port 3000) | db: postgresql 15 (port 5432) | cache: redis (port 6379) | nginx: active | last deploy: 2026-01-01
+
+---
+To read the full operational context, run:
+  python3 ~/.sigil/sigil.py read --key <passphrase>
